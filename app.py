@@ -1,114 +1,143 @@
 import streamlit as st
+from datetime import date
 
-st.set_page_config(page_title="Focusmate", page_icon="🎯", layout="centered")
+# 페이지 설정
+st.set_page_config(page_title="Focusmate - 집중 생산성 앱", page_icon="🎯", layout="centered")
 
-# CSS 스타일 정의
-st.markdown("""
-<style>
-/* 배경과 기본 폰트 */
-body {
-    background-color: #f4f7fa;
-    color: #333333;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
+# CSS 스타일 (모던하고 깔끔한 느낌)
+st.markdown(
+    """
+    <style>
+    .app-header {
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-align: center;
+        color: #4B6EAF;
+        margin-bottom: 1rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .task-item {
+        background: #F3F6FD;
+        padding: 0.8rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgb(75 110 175 / 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .task-text {
+        font-size: 1.1rem;
+        flex-grow: 1;
+        margin-left: 0.7rem;
+        color: #2F3E63;
+    }
+    .due-date {
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 5px;
+        min-width: 110px;
+        text-align: center;
+        user-select: none;
+    }
+    .due-normal {
+        background-color: #A8C1FF;
+        color: #1D2E69;
+    }
+    .due-soon {
+        background-color: #FFBD59;
+        color: #5C3900;
+    }
+    .due-past {
+        background-color: #FF5C5C;
+        color: #570000;
+    }
+    .delete-btn {
+        cursor: pointer;
+        font-size: 1.2rem;
+        margin-left: 1rem;
+        color: #A83C3C;
+        transition: color 0.2s ease;
+        user-select: none;
+    }
+    .delete-btn:hover {
+        color: #FF0000;
+    }
+    .input-area {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .add-btn {
+        background-color: #4B6EAF;
+        border: none;
+        color: white;
+        padding: 0.6rem 1.5rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .add-btn:hover {
+        background-color: #3A5490;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-/* 카드 스타일 */
-.card {
-    background: white;
-    padding: 20px;
-    margin-bottom: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
+st.markdown('<div class="app-header">🎯 Focusmate - 집중 생산성 앱</div>', unsafe_allow_html=True)
 
-/* 헤더 */
-h1, h2 {
-    color: #2c3e50;
-    font-weight: 700;
-}
-
-/* 버튼 커스텀 */
-.stButton>button {
-    background-color: #2e86de;
-    color: white;
-    border-radius: 8px;
-    padding: 8px 20px;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
-}
-.stButton>button:hover {
-    background-color: #1b4f72;
-}
-
-/* 텍스트 입력창 커스텀 */
-div.stTextInput>div>input {
-    border-radius: 8px;
-    border: 1.5px solid #ccc;
-    padding: 10px;
-    font-size: 16px;
-}
-
-/* 할 일 목록 */
-.todo-item {
-    font-size: 18px;
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.title("🎯 Focusmate - 집중 생산성 앱")
-
-# 투두 리스트 카드
-st.markdown('<div class="card">', unsafe_allow_html=True)
-st.header("✅ 할 일 목록")
-
-task_input = st.text_input("새 작업 추가", key="task_input")
-
-if st.button("추가"):
-    if task_input.strip() != "":
-        if 'tasks' not in st.session_state:
-            st.session_state.tasks = []
-        st.session_state.tasks.append(task_input.strip())
-        st.session_state.task_input = ""
-
+# 세션 상태 초기화
 if 'tasks' not in st.session_state:
     st.session_state.tasks = []
 
-for i, task in enumerate(st.session_state.tasks):
-    cols = st.columns([9, 1])
-    cols[0].markdown(f'<div class="todo-item">• {task}</div>', unsafe_allow_html=True)
-    if cols[1].button("❌", key=f"del_{i}"):
-        st.session_state.tasks.pop(i)
+# 할 일 입력 및 날짜 선택 UI
+with st.form(key='task_form'):
+    cols = st.columns([4, 2, 1])
+    task_input = cols[0].text_input("할 일을 입력하세요")
+    due_date = cols[1].date_input("마감일 선택", value=date.today())
+    submit = cols[2].form_submit_button("추가")
+
+if submit:
+    if task_input.strip() != "":
+        st.session_state.tasks.append({'task': task_input.strip(), 'due': due_date})
+
+# 오늘 날짜
+today = date.today()
+
+# 할 일 목록 출력
+for idx, item in enumerate(st.session_state.tasks):
+    task = item['task']
+    due = item['due']
+    days_left = (due - today).days
+
+    # 마감일 상태에 따른 클래스 지정
+    if days_left < 0:
+        due_class = "due-past"
+    elif days_left <= 3:
+        due_class = "due-soon"
+    else:
+        due_class = "due-normal"
+
+    st.markdown(
+        f"""
+        <div class="task-item">
+            <div class="task-text">• {task}</div>
+            <div class="due-date {due_class}">📅 {due.strftime('%Y-%m-%d')}</div>
+            <div class="delete-btn" onclick="delete_task({idx})" id="del_{idx}">❌</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+# 삭제 버튼 기능 처리
+for idx in range(len(st.session_state.tasks)):
+    if st.button(f"delete_{idx}", key=f"del_btn_{idx}"):
+        st.session_state.tasks.pop(idx)
         st.experimental_rerun()
-st.markdown('</div>', unsafe_allow_html=True)
 
-# 타이머 카드
-st.markdown('<div class="card">', unsafe_allow_html=True)
-st.header("⏲️ 집중 타이머")
-timer_length = st.slider("타이머 설정 (분)", 1, 60, 25)
-
-st.markdown(f"""
-<div style="text-align:center; font-size: 72px; font-weight: 700; color:#2e86de; margin-top: 20px;">
-{timer_length:02}:00
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<div style="text-align:center; margin-top: 20px;">
-<button style="
-    background-color:#2e86de; 
-    color:white; 
-    border:none; 
-    padding: 12px 40px; 
-    font-size: 20px; 
-    border-radius: 10px;
-    cursor:pointer;">
-시작하기
-</button>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
