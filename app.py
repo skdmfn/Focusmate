@@ -1,84 +1,114 @@
 import streamlit as st
-from datetime import datetime, timedelta
 
-st.set_page_config(page_title="Focusmate", layout="centered")
+st.set_page_config(page_title="Focusmate", page_icon="🎯", layout="centered")
 
-# 초기 상태값 설정
+# CSS 스타일 정의
+st.markdown("""
+<style>
+/* 배경과 기본 폰트 */
+body {
+    background-color: #f4f7fa;
+    color: #333333;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* 카드 스타일 */
+.card {
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* 헤더 */
+h1, h2 {
+    color: #2c3e50;
+    font-weight: 700;
+}
+
+/* 버튼 커스텀 */
+.stButton>button {
+    background-color: #2e86de;
+    color: white;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+.stButton>button:hover {
+    background-color: #1b4f72;
+}
+
+/* 텍스트 입력창 커스텀 */
+div.stTextInput>div>input {
+    border-radius: 8px;
+    border: 1.5px solid #ccc;
+    padding: 10px;
+    font-size: 16px;
+}
+
+/* 할 일 목록 */
+.todo-item {
+    font-size: 18px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.title("🎯 Focusmate - 집중 생산성 앱")
+
+# 투두 리스트 카드
+st.markdown('<div class="card">', unsafe_allow_html=True)
+st.header("✅ 할 일 목록")
+
+task_input = st.text_input("새 작업 추가", key="task_input")
+
+if st.button("추가"):
+    if task_input.strip() != "":
+        if 'tasks' not in st.session_state:
+            st.session_state.tasks = []
+        st.session_state.tasks.append(task_input.strip())
+        st.session_state.task_input = ""
+
 if 'tasks' not in st.session_state:
     st.session_state.tasks = []
 
-if 'task_input' not in st.session_state:
-    st.session_state.task_input = ""
-
-if 'timer_start' not in st.session_state:
-    st.session_state.timer_start = None
-
-if 'timer_length' not in st.session_state:
-    st.session_state.timer_length = 25  # 기본 25분
-
-# 투두 리스트 함수
-def add_task():
-    task = st.session_state.task_input.strip()
-    if task:
-        st.session_state.tasks.append(task)
-        st.session_state.task_input = ""
-
-def remove_task(idx):
-    st.session_state.tasks.pop(idx)
-
-# 타이머 함수
-def start_timer():
-    st.session_state.timer_start = datetime.now()
-
-def reset_timer():
-    st.session_state.timer_start = None
-
-# UI 구성
-st.title("🎯 Focusmate - 집중 생산성 앱")
-
-# 투두 리스트 영역
-st.header("✅ 할 일 목록")
-
-col1, col2 = st.columns([3,1])
-
-with col1:
-    st.text_input("새 작업 추가", key="task_input", on_change=add_task)
-    for i, task in enumerate(st.session_state.tasks):
-        task_col1, task_col2 = st.columns([8,1])
-        with task_col1:
-            st.write(f"- {task}")
-        with task_col2:
-            if st.button("❌", key=f"del_{i}"):
-                remove_task(i)
-                st.experimental_rerun()
-
-with col2:
-    st.write("")
-
-# 타이머 영역
-st.header("⏲️ 집중 타이머")
-
-st.session_state.timer_length = st.slider("타이머 설정 (분)", 1, 60, st.session_state.timer_length)
-
-if st.session_state.timer_start is None:
-    if st.button("타이머 시작"):
-        start_timer()
+for i, task in enumerate(st.session_state.tasks):
+    cols = st.columns([9, 1])
+    cols[0].markdown(f'<div class="todo-item">• {task}</div>', unsafe_allow_html=True)
+    if cols[1].button("❌", key=f"del_{i}"):
+        st.session_state.tasks.pop(i)
         st.experimental_rerun()
-else:
-    elapsed = (datetime.now() - st.session_state.timer_start).total_seconds()
-    remaining = st.session_state.timer_length * 60 - elapsed
+st.markdown('</div>', unsafe_allow_html=True)
 
-    if remaining > 0:
-        mins, secs = divmod(int(remaining), 60)
-        st.markdown(f"<h1 style='color:#d9534f;'>{mins:02}:{secs:02}</h1>", unsafe_allow_html=True)
-        if st.button("타이머 리셋"):
-            reset_timer()
-            st.experimental_rerun()
-    else:
-        st.success("⏰ 타이머 종료! 잘 했어요!")
-        if st.button("다시 시작"):
-            start_timer()
-            st.experimental_rerun()
-        if st.button("리셋"):
-            reset_timer()
-            st.experimental_rerun()
+# 타이머 카드
+st.markdown('<div class="card">', unsafe_allow_html=True)
+st.header("⏲️ 집중 타이머")
+timer_length = st.slider("타이머 설정 (분)", 1, 60, 25)
+
+st.markdown(f"""
+<div style="text-align:center; font-size: 72px; font-weight: 700; color:#2e86de; margin-top: 20px;">
+{timer_length:02}:00
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<div style="text-align:center; margin-top: 20px;">
+<button style="
+    background-color:#2e86de; 
+    color:white; 
+    border:none; 
+    padding: 12px 40px; 
+    font-size: 20px; 
+    border-radius: 10px;
+    cursor:pointer;">
+시작하기
+</button>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
