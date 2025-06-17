@@ -1,61 +1,129 @@
 import streamlit as st
 from datetime import date, datetime, timedelta
+import time
 
 st.set_page_config(page_title="Focusmate - 집중 생산성 앱", page_icon="🎯", layout="centered")
 
-# CSS 스타일 정의
-st.markdown("""
-<style>
-.app-header {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #0B3D91;
-    text-align: center;
-    margin-bottom: 30px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-.task-item {
-    background-color: #E9F1F7;
-    padding: 12px 15px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    font-size: 1.1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 5px rgba(11, 61, 145, 0.15);
-}
-.task-text {
-    flex-grow: 1;
-    margin-right: 15px;
-}
-.due-date {
-    font-size: 0.9rem;
-    color: #555;
-    min-width: 110px;
-    text-align: right;
-    white-space: nowrap;
-}
-.timer-container {
-    background-color: #D6E6F2;
-    padding: 20px 25px;
-    border-radius: 12px;
-    margin-top: 35px;
-    box-shadow: 0 3px 8px rgba(11, 61, 145, 0.2);
-}
-.timer-display {
-    font-size: 3rem;
-    font-weight: 700;
-    color: #0B3D91;
-    text-align: center;
-    margin-top: 15px;
-    font-family: 'Courier New', Courier, monospace;
-}
-button {
-    font-weight: 600;
-}
-</style>
-""", unsafe_allow_html=True)
+# CSS 스타일
+st.markdown(
+    """
+    <style>
+    .app-header {
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-align: center;
+        color: #4B6EAF;
+        margin-bottom: 1.5rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .task-item {
+        background: #F3F6FD;
+        padding: 0.8rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgb(75 110 175 / 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .task-text {
+        font-size: 1.1rem;
+        flex-grow: 1;
+        margin-left: 0.7rem;
+        color: #2F3E63;
+    }
+    .due-date {
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 5px;
+        min-width: 110px;
+        text-align: center;
+        user-select: none;
+    }
+    .due-normal {
+        background-color: #A8C1FF;
+        color: #1D2E69;
+    }
+    .due-soon {
+        background-color: #FFBD59;
+        color: #5C3900;
+    }
+    .due-past {
+        background-color: #FF5C5C;
+        color: #570000;
+    }
+    .delete-btn {
+        cursor: pointer;
+        font-size: 1.2rem;
+        margin-left: 1rem;
+        color: #A83C3C;
+        transition: color 0.2s ease;
+        user-select: none;
+    }
+    .delete-btn:hover {
+        color: #FF0000;
+    }
+    .input-area {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .add-btn {
+        background-color: #4B6EAF;
+        border: none;
+        color: white;
+        padding: 0.6rem 1.5rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .add-btn:hover {
+        background-color: #3A5490;
+    }
+    .timer-container {
+        background: #E9F0FF;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 3px 7px rgb(75 110 175 / 0.3);
+        max-width: 400px;
+        margin: 2rem auto 0 auto;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        text-align: center;
+    }
+    .timer-display {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #2F3E63;
+        margin-bottom: 1rem;
+        letter-spacing: 0.15em;
+    }
+    .timer-buttons button {
+        background-color: #4B6EAF;
+        border: none;
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin: 0 0.5rem;
+        transition: background-color 0.3s ease;
+    }
+    .timer-buttons button:hover {
+        background-color: #3A5490;
+    }
+    .timer-select {
+        margin-bottom: 1rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 st.markdown('<div class="app-header">🎯 Focusmate - 집중 생산성 앱</div>', unsafe_allow_html=True)
 
@@ -72,7 +140,7 @@ if 'timer_running' not in st.session_state:
 if 'timer_end_time' not in st.session_state:
     st.session_state.timer_end_time = None
 
-# 할 일 입력 폼
+# 할 일 입력 및 마감일 선택
 with st.form(key='task_form'):
     cols = st.columns([4, 2, 1])
     task_input = cols[0].text_input("할 일을 입력하세요")
@@ -84,30 +152,41 @@ if submit:
         st.session_state.tasks.append({'task': task_input.strip(), 'due': due_date})
 
 # 할 일 목록 출력
-if st.session_state.tasks:
-    st.markdown("### 📝 할 일 목록")
-    for idx, item in enumerate(st.session_state.tasks):
-        due_str = item['due'].strftime("%Y-%m-%d")
-        task_html = f"""
-        <div class="task-item">
-            <div class="task-text">{item['task']}</div>
-            <div class="due-date">{due_str}</div>
-        </div>
-        """
-        st.markdown(task_html, unsafe_allow_html=True)
-else:
-    st.info("할 일을 추가해 주세요.")
+today = date.today()
+for idx, item in enumerate(st.session_state.tasks):
+    task = item['task']
+    due = item['due']
+    days_left = (due - today).days
 
-# 타이머 영역 시작
+    if days_left < 0:
+        due_class = "due-past"
+    elif days_left <= 3:
+        due_class = "due-soon"
+    else:
+        due_class = "due-normal"
+
+    # 삭제 버튼
+    col1, col2, col3 = st.columns([8, 2, 1])
+    with col1:
+        st.markdown(
+            f'<div class="task-text">• {task}</div>', unsafe_allow_html=True
+        )
+    with col2:
+        st.markdown(
+            f'<div class="due-date {due_class}">📅 {due.strftime("%Y-%m-%d")}</div>', unsafe_allow_html=True
+        )
+    with col3:
+        if st.button("❌", key=f"del_{idx}", help="할 일 삭제"):
+            st.session_state.tasks.pop(idx)
+            st.experimental_rerun()
+
+# --- 타이머 기능 ---
 st.markdown('<div class="timer-container">', unsafe_allow_html=True)
+
 st.markdown('<h3>⏱️ 집중 타이머</h3>', unsafe_allow_html=True)
 
-timer_type = st.selectbox(
-    "타이머 유형 선택", 
-    options=["집중 25분", "집중 50분", "휴식 5분", "휴식 10분"], 
-    index=0,
-    key="timer_type_select"
-)
+# 타이머 유형 선택 (여기에 50분 추가)
+timer_type = st.selectbox("타이머 유형 선택", options=["집중 25분", "집중 50분", "휴식 5분", "휴식 10분"], index=0, key="timer_type_select")
 
 timer_seconds_map = {
     "집중 25분": 25 * 60,
@@ -116,6 +195,7 @@ timer_seconds_map = {
     "휴식 10분": 10 * 60,
 }
 
+# 타이머 초기화, 시작, 중지 함수
 def start_timer():
     st.session_state.timer_seconds = timer_seconds_map[timer_type]
     st.session_state.timer_end_time = datetime.now() + timedelta(seconds=st.session_state.timer_seconds)
@@ -126,6 +206,7 @@ def stop_timer():
     st.session_state.timer_end_time = None
     st.session_state.timer_seconds = 0
 
+# 타이머 버튼 UI
 col_start, col_stop = st.columns(2)
 with col_start:
     if st.button("시작", disabled=st.session_state.timer_running):
@@ -134,6 +215,7 @@ with col_stop:
     if st.button("중지", disabled=not st.session_state.timer_running):
         stop_timer()
 
+# 타이머 시간 계산 및 표시
 if st.session_state.timer_running and st.session_state.timer_end_time:
     remaining = (st.session_state.timer_end_time - datetime.now()).total_seconds()
     if remaining <= 0:
@@ -150,11 +232,13 @@ secs = int(remaining % 60)
 timer_display = f"{mins:02d}:{secs:02d}"
 
 st.markdown(f'<div class="timer-display">{timer_display}</div>', unsafe_allow_html=True)
+
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 타이머 실행 중이면 페이지 자동 갱신
+# 타이머 자동 갱신 (최대 1초 간격)
 if st.session_state.timer_running:
     st.experimental_rerun()
+
 
 
 # 타이머 자동 갱신 (최대 1초 간격)
