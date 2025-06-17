@@ -34,6 +34,7 @@ st.markdown("""
     color: #555;
     min-width: 110px;
     text-align: right;
+    white-space: nowrap;
 }
 .timer-container {
     background-color: #D6E6F2;
@@ -83,7 +84,6 @@ if submit:
         st.session_state.tasks.append({'task': task_input.strip(), 'due': due_date})
 
 # 할 일 목록 출력
-today = date.today()
 if st.session_state.tasks:
     st.markdown("### 📝 할 일 목록")
     for idx, item in enumerate(st.session_state.tasks):
